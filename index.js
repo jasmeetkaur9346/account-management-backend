@@ -13,6 +13,7 @@ const app = express()
 
 const allowedOrigins = [
     'https://account-management-frontend-ten.vercel.app',
+    'https://accounts.merasoftware.com',
     process.env.FORNTEND_URL, // आपके .env से
     'http://localhost:3000' // लोकल डेवलपमेंट के लिए
   ];
