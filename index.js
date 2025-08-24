@@ -5,7 +5,7 @@ require('dotenv').config()
 const connectDB = require("./config/db")
 
 // Import Routes
-const routes = require('./routes/index')
+const router = require('./routes/index')
 
 connectDB();
 
@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // API Routes
-app.use('/api', routes);
+app.use('/api', router);
 // Health Check Route
 app.get('/', (req, res) => {
   res.json({
