@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const accountModel = require('../models/accountModel');
 const entryModel = require('../models/entryModel');
 
@@ -55,21 +56,39 @@ const createAccount = async (req, res) => {
 // Get All Accounts
 const getAllAccounts = async (req, res) => {
   try {
-    const accounts = await accountModel.find({
-      createdBy: req.userId,
-      isActive: true
-    }).sort({ createdAt: -1 });
+    const accounts = await accountModel.aggregate([
+      {
+        $match: {
+          createdBy: new mongoose.Types.ObjectId(req.userId),
+          isActive: true
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: 'entries',               // entryModel ka default collection name
+          let: { accId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$accountId', '$$accId'] } } },
+            { $sort: { date: -1, createdAt: -1 } }, // latest by business date, then createdAt
+            { $limit: 1 },
+            { $project: { _id: 0, amount: 1, type: 1, date: 1, createdAt: 1 } }
+          ],
+          as: 'lastEntry'
+        }
+      },
+      { $addFields: { lastEntry: { $arrayElemAt: ['$lastEntry', 0] } } }
+    ]);
 
     res.status(200).json({
-      message: "Accounts fetched successfully",
+      message: 'Accounts fetched successfully',
       data: accounts,
       error: false,
       success: true
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message || "Internal server error",
+      message: error.message || 'Internal server error',
       error: true,
       success: false
     });

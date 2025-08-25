@@ -15,8 +15,11 @@ const registerUser = async (req, res) => {
       });
     }
 
+    const uname = username.trim();
+    const unameLower = uname.toLowerCase();
+
     // Check if user already exists
-    const existingUser = await userModel.findOne({ username });
+    const existingUser = await userModel.findOne({ usernameLower: unameLower });
     if (existingUser) {
       return res.status(400).json({
         message: "Username already exists",
@@ -31,7 +34,8 @@ const registerUser = async (req, res) => {
 
     // Create new user
     const newUser = new userModel({
-      username,
+     username: uname,         // keep original case for display
+      usernameLower: unameLower, // ensure set for safety (also set by pre-save)
       password: hashedPassword
     });
 
@@ -69,8 +73,10 @@ const loginUser = async (req, res) => {
       });
     }
 
+    const unameLower = username.trim().toLowerCase();
+
     // Find user
-    const user = await userModel.findOne({ username });
+     const user = await userModel.findOne({ usernameLower: unameLower });
     if (!user) {
       return res.status(400).json({
         message: "Invalid credentials",
@@ -93,7 +99,7 @@ const loginUser = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '365d' }
     );
 
     res.status(200).json({
